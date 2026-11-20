@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from live_gemini_agent import repo, run_agent_task, reset_sandbox, DB_PATH, WORKSPACE
+from agent_runtime import repo, run_agent_task, reset_sandbox, DB_PATH, WORKSPACE
 
 app = FastAPI(title="AgentGit Mission Control")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
