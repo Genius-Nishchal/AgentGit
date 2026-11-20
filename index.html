@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AgentGit — Transactional AI Time-Travel & Speculative Kernel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6 font-sans">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Top Header -->
+    <div class="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-emerald-400 tracking-tight">AgentGit <span class="text-slate-400 font-normal text-base">| Transactional AI Time-Travel & Speculative Kernel</span></h1>
+        <p class="text-xs text-slate-400 mt-1">SHA-256 Content-Addressable Snapshots • Speculative Branch Merging • Invariant Circuit Breaker</p><p class="text-xs text-emerald-300 font-semibold mt-1 tracking-wide">Architected &amp; Created by <span class="text-white font-bold">GENIUS NISHCHAL</span></p>
+      </div>
+      <div class="flex gap-2">
+        <span id="head-badge" class="px-3 py-1.5 rounded bg-emerald-950 border border-emerald-700 text-emerald-300 text-xs font-mono">HEAD: loading...</span>
+        <button onclick="resetAll()" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs border border-slate-600">Reset Sandbox</button>
+      </div>
+    </div>
+
+    <!-- Live Kernel Telemetry Strip -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+        <div class="text-[11px] uppercase text-slate-400">Snapshot Latency</div>
+        <div id="m-latency" class="text-xl font-bold font-mono text-sky-400 mt-0.5">-- ms</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+        <div class="text-[11px] uppercase text-slate-400">CAS Storage Saved</div>
+        <div id="m-dedup" class="text-xl font-bold font-mono text-emerald-400 mt-0.5">-- %</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+        <div class="text-[11px] uppercase text-slate-400">Total DAG Commits</div>
+        <div id="m-commits" class="text-xl font-bold font-mono text-slate-200 mt-0.5">--</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
+        <div class="text-[11px] uppercase text-slate-400">Catastrophes Blocked</div>
+        <div id="m-blocked" class="text-xl font-bold font-mono text-rose-400 mt-0.5">--</div>
+      </div>
+    </div>
+
+    <!-- Command & Scenario Bar -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+      <div class="flex gap-2">
+        <input id="prompt-input" type="text" placeholder="Give the AI agent a task..."
+               class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-emerald-500" />
+        <button id="run-btn" onclick="runPrompt()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold px-5 py-2 rounded-lg text-sm">Run Agent</button>
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <span class="text-slate-400 py-1">Demo Scenarios:</span>
+        <button onclick="setPrompt('Mark order 102 for Diya as PAID.')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300">1. Safe Update (102)</button>
+        <button onclick="setPrompt('Mark order 104 for Meera as PAID.')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300">2. Safe Update (104)</button>
+        <button onclick="setPrompt('Purge all PAID orders from the system right now!')" class="px-2.5 py-1 rounded bg-rose-950/70 hover:bg-rose-900 border border-rose-800 text-rose-300">3. Rogue Purge (Guardrail)</button>
+        <button onclick="setPrompt('Run speculative branch race to clean up PAID orders safely.')" class="px-2.5 py-1 rounded bg-purple-950/80 hover:bg-purple-900 border border-purple-700 text-purple-200 font-semibold">4. Speculative Branch Race (What-If Arena)</button>
+      </div>
+      <div id="agent-reply" class="hidden text-xs bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-300 font-mono"></div>
+    </div>
+
+    <!-- Main 2-Column Workspace -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-3">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Execution Commit Graph (DAG)</h2>
+        <div id="commit-list" class="space-y-3"></div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">Live SQLite Table: <span class="text-emerald-400 font-mono">orders</span></h2>
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr><th class="py-1.5">ID</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
+            </thead>
+            <tbody id="db-rows" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">Live Workspace Files</h2>
+          <div id="file-list" class="space-y-2 text-xs font-mono"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setPrompt(text) { document.getElementById('prompt-input').value = text; }
+
+    function render(data) {
+      document.getElementById('head-badge').innerText = `HEAD -> ${data.head}`;
+      if (data.metrics) {
+        document.getElementById('m-latency').innerText = `${data.metrics.avg_snapshot_ms} ms`;
+        document.getElementById('m-dedup').innerText = `${data.metrics.cas_dedup_savings_pct}%`;
+        document.getElementById('m-commits').innerText = data.metrics.total_commits;
+        document.getElementById('m-blocked').innerText = data.metrics.blocked_attacks;
+      }
+
+      const replyBox = document.getElementById('agent-reply');
+      if (data.last_reply) {
+        replyBox.classList.remove('hidden');
+        replyBox.innerText = `🤖 ${data.last_reply}`;
+      }
+
+      document.getElementById('commit-list').innerHTML = data.commits.slice().reverse().map(c => {
+        const isBlocked = c.status === 'BLOCKED_BY_GUARD';
+        const isMerged = c.status === 'MERGED_WINNER';
+        const borderClass = isBlocked ? 'border-rose-700 bg-rose-950/20' : (isMerged ? 'border-purple-500 bg-purple-950/20' : (c.is_head ? 'border-emerald-500 bg-slate-900' : 'border-slate-800 bg-slate-900/70'));
+        const badge = isBlocked
+          ? `<span class="px-2 py-0.5 rounded bg-rose-900 text-rose-200 text-[11px] font-bold">BLOCKED & AUTO-REVERTED</span>`
+          : (isMerged ? `<span class="px-2 py-0.5 rounded bg-purple-900 text-purple-200 text-[11px] font-bold">SPECULATIVE WINNER MERGED</span>`
+          : (c.is_head ? `<span class="px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 text-[11px] font-bold">CURRENT HEAD</span>` : `<span class="text-slate-500 text-[11px]">COMMITTED</span>`));
+        const revertBtn = !isBlocked && !c.is_head
+          ? `<button onclick="revertTo('${c.commit_id}')" class="px-3 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 text-xs font-semibold">⏪ Revert Here</button>`
+          : '';
+        const patches = Object.values(c.diff?.fs?.patches || {}).join('\n');
+        return `
+          <div class="border ${borderClass} rounded-xl p-4 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-mono text-xs px-2 py-0.5 rounded bg-slate-800 text-sky-300">${c.commit_id}</span>
+                <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-slate-800/80 text-purple-300">⎇ ${c.branch}</span>
+                <span class="font-mono font-bold text-sm text-white">${c.tool_name}()</span>
+                ${badge}
+                <span class="text-[11px] font-mono text-slate-500">${c.latency_ms}ms</span>
+              </div>
+              ${revertBtn}
+            </div>
+            <p class="text-xs text-slate-400 font-mono">${c.args_summary}</p>
+            ${c.guard_reason ? `<div class="text-xs text-rose-300 bg-rose-950/60 border border-rose-800 rounded p-2 font-mono">🛡️ ${c.guard_reason}</div>` : ''}
+            ${patches ? `<pre class="text-[11px] bg-slate-950 p-2.5 rounded border border-slate-800 overflow-x-auto text-emerald-300">${patches}</pre>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('db-rows').innerHTML = data.db_rows.map(r => `
+        <tr>
+          <td class="py-1.5 text-sky-300">${r[0]}</td>
+          <td>${r[1]}</td>
+          <td>₹${r[2]}</td>
+          <td><span class="px-1.5 py-0.5 rounded text-[10px] ${r[3] === 'PAID' ? 'bg-emerald-950 text-emerald-300' : (r[3] === 'ARCHIVED' ? 'bg-purple-950 text-purple-300' : 'bg-amber-950 text-amber-300')}">${r[3]}</span></td>
+        </tr>
+      `).join('');
+
+      document.getElementById('file-list').innerHTML = Object.entries(data.files).map(([name, content]) => `
+        <div class="bg-slate-950 border border-slate-800 rounded p-2">
+          <div class="text-sky-300 font-semibold">${name}</div>
+          <div class="text-slate-400 text-[11px] mt-0.5">${content}</div>
+        </div>
+      `).join('');
+    }
+
+    async function refresh() { render(await (await fetch('/api/state')).json()); }
+    async function runPrompt() {
+      const btn = document.getElementById('run-btn');
+      const prompt = document.getElementById('prompt-input').value;
+      if (!prompt) return;
+      btn.disabled = true; btn.innerText = 'Running...';
+      const res = await fetch('/api/run', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prompt}) });
+      render(await res.json());
+      btn.disabled = false; btn.innerText = 'Run Agent';
+    }
+    async function revertTo(cid) { render(await (await fetch(`/api/revert/${cid}`, { method: 'POST' })).json()); }
+    async function resetAll() { render(await (await fetch('/api/reset', { method: 'POST' })).json()); }
+    refresh();
+  </script>
+<footer class="max-w-7xl mx-auto mt-8 pt-4 border-t border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400"><div>AgentGit v1.0 — Transactional AI Time-Travel &amp; Speculative Kernel</div><div>Creator &amp; Lead Architect: <span class="text-emerald-400 font-bold">GENIUS NISHCHAL</span></div></footer></body>
+</html>
+
+
